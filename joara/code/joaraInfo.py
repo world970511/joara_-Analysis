@@ -1,61 +1,41 @@
 from bs4 import BeautifulSoup as bs
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
-import re
 import urllib.request as req
 import pandas as pd
-
-def infoCount(url):
-    infoList =[]
-    st=''
-    html = req.urlopen(url)
-    rq = bs(html, "html.parser")
-    for t in rq.select('td'):  # 베스트에 오른 로맨스판타지 북코드 추출
-        if t.select('a')!=[]:
-            i=str(t.select('a'))
-            if '[로맨스판타지]'in i:
-                infoUrl='http://www.joara.com/romancebl/'+re.sub('["<strong>]+\[+[\w]+\]+[</strong>]+.+[</a>]+\]','',i.replace('[<a href="/literature/',''))
-                st=call_info(infoUrl)#소개글 전체 긁어오기
-                infoList.append(st)
-    return infoList
-
+import os
 
 def call_info(infoUrl):#소개글 추출
-    html = req.urlopen(infoUrl)
-    rq = bs(html, "html.parser")
-    try:
-        info=str(rq.select_one('div.t_cont_v').text).replace('\r','').replace('\t','').replace('\n','')
-        return info
-    except AttributeError as e:
-        return 'none'
+    ans=[]
+    for i in infoUrl:
+        html = req.urlopen(i)
+        rq = bs(html, "html.parser")
+        try:
+            text=rq.select_one('div.t_cont_v').text
+            info=str(rq.select_one('div.t_cont_v').text).replace('\r','').replace('\t','').replace('\n','')
+            ans.append(info)
+        except AttributeError as e:
+            ans.append('none')
+    return ans
 
-
-def makeUrl(best, category, m, d, pagelist):#투데이베스트
-    Info = []
-    for i in range(1, d + 1):
-        for i2 in pagelist:
-            s = best + str(i2) + category + '&cur_year=2021&cur_month=' + str(m) + '&cur_day=' + str(i)
-            Info += infoCount(s)
-    return Info
 
 if __name__ == '__main__':
-    f2 = open('1-5월_통합_로판투데이베스트_소개글_중복제거.txt', 'w', encoding='utf-8')
-    pagelist=[1,2,3,4,5]#1~100순위가 담긴 페이지 번호
-    month=[1,2,3,4,5]#달
-    days=[31,28,31,30,14]#날짜
+    os.chdir('./infos')
+    li = os.listdir()
 
-    best='http://www.joara.com/best/today_best_list.html?page_no='# 조아라 투데이베스트 주소
-    category='&sl_category=&sl_subcategory=series'#로판 장르/무료 연재분
+    for i,s in enumerate (li):
+        data = pd.read_table(s)
+        print('초반 데이터 확인 :', len(data))
 
-    for m in month:
-        li=makeUrl(best,category,m,days[m-1],pagelist)
-        t=str(m)+'월_로판투데이베스트_소개글_중복제거.txt'
+        data.drop_duplicates(subset=['code'], inplace=True)  # 중복된 리뷰들을 제거한다
+        print('중복 제거 확인 :', len(data))
 
-        f = open(t, 'w', encoding='utf-8')
+        info_li =call_info(data['code'].tolist())
+        try:
+            data['info'] = info_li
+            print('pass')
+        except ValueError:  # ValueError가 있을 경우
+            data['info'] = pd.Series(info_li)
+            print('pass')
 
-        f.writelines('\n'.join(list(set(li))))#중복제거한 내용 텍스트파일로 저장
-        f2.writelines('\n'.join(list(set(li))))  #소개글 통합
-        print('pass')
-
-    f.close()
-    f2.close()
+        data.to_csv(str(i+1) + "월 조아라 로판 투데이베스트 목록(중복있음).txt", mode='w', sep='\t', index=False)
