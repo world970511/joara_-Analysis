@@ -1,6 +1,7 @@
-from konlpy.tag import Komoran
+from konlpy.tag import Okt
 from collections import Counter
 from wordcloud import WordCloud
+import os
 import pandas as pd
 
 def anlay1_count(li):
@@ -9,19 +10,26 @@ def anlay1_count(li):
     monthBest = count.most_common(10)  # 투베 등장 빈도수가 높은 10개만 반환
     return monthBest
 
-def anlay2_wc(li,s,month):
-    ko = Komoran()
-    delete = [')', '(', ']', '[', '/', '이메일', '#', '계약작', '미계약작', '커미션', '메일', '작가님', '불펌', '표지', '팬아트',
-              '독자님', '수정', '등록', '픽사베이', '문의', '상용가능', '이미지', '연재','none','때문에','그래서','너','우리',
-              '하지만','여주','남주','나']
-    for d in delete:
-         if d in s: s.replace(d, '')
-
-    str=' \n '.join(li)+s
-
+def anlay2_wc(month,m):
+    ko = Okt()
     n = ko.morphs(str)
-    for i, v in enumerate(n):
-        if len(v) < 2:  # 글자 수가 2 이하인 명사 제외
+    okt = Okt()
+    stopwords = ['의', '가', '이', '은', '들', '는', '좀', '원', '권', '과', '도', '를', '으로', '자', '에', '와', '한', '하다', '여', '남',
+                 '녀','을','를','너','나']
+
+    li = []
+    for sentence in month['info']:
+        temp_X = okt.morphs(sentence, stem=True)  # 토큰화
+        temp_X = [word for word in temp_X if not word in stopwords]  # 불용어 제거
+        li.append(temp_X)
+
+    for sentence in month['title']:
+        temp_X = okt.morphs(sentence, stem=True)  # 토큰화
+        temp_X = [word for word in temp_X if not word in stopwords]  # 불용어 제거
+        li.append(temp_X)
+
+    for i, v in enumerate(li):
+        if len(v) < 2:  # 글자 수가 2 이하인 것 제외
             n.pop(i)
 
     count = Counter(n)  # 딕셔너리로 변경
@@ -39,23 +47,33 @@ def  anlay2_wc_v(nl,month):
                    max_font_size=300)
 
     wc.generate_from_frequencies(dict(nl))
-    wc.to_file(str(month)+'월_제목/소개글_단어사용빈도_50.png')
+    wc.to_file(str(m)+'월_제목/소개글_단어사용빈도_50.png')
 
 
 if __name__ == "__main__":
-    file = open('1-5.14 로판투베 10.txt', 'w', encoding='utf-8')
-    f =pd.read_excel('1-5월14일_조아라_로판_투데이베스트_중복제거x.xlsx')
-    f.fillna("0", inplace=True)
-    f2=pd.read_excel('1-5월14일_조아라_로판_투데이베스트_소개글_중복제거x.xlsx')
-    #s=''
+    all_data=pd.DataFrame(columns=['title','info'])
+    os.chdir('./infos/month_not_remove')
+    li = os.listdir()
+    m=1
+    for i in li:
+        print(i,'\n')
+        data=pd.read_table(i)
+        print(anlay1_count(data['title'].tolist()))
 
-    for i in range(1,6):
-        li=f[str(i)+'월 로판 투데이베스트'].tolist()
-        li2=f2[str(i)+'월 로판 투데이베스트'].tolist()
-        file.writelines(str(i)+'월 로판 투데이베스트 10')
-        for i in range (0,10):
-            file.writelines('\n'+anlay1_count(li)[i][0]+"/빈도="+ str(anlay1_count(li)[i][1])+'\n')
-        #anlay2_wc(li,s,i)
+        # 중복된 책을 제거한다
+        print('초반 데이터 확인 :', len(data))
+        data.drop_duplicates(subset=['title'], inplace=True)
+        print('중복 제거 확인 :', len(data))
+        # Null 값이 존재하는 행 제거
+        data = data.dropna(how='any')
+        print('null값이 존재하는가?=', all_data.isnull().values.any())  # Null 값이 존재하는지 확인
+        all_data = pd.concat([all_data, data], ignore_index=True, axis=0)
+        anlay2_wc(data,m)
+        m+=1
+        print('\n===================\n')
+
+    all_data.to_csv('1/1~5/31_조아라_투베_로맨스판타지_중복제거.txt',mode='w' ,sep='\t', index=False)
+
 
 
 

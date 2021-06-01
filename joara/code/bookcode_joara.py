@@ -8,38 +8,29 @@ import os
 
 
 def get_t_info(best,category,y,m,d,pagelist):
-    ans_c=[]
-    ans_t=[]
+    ans_c = []
     for i in range (1,d+1):#url 주소 생성
         for i2 in pagelist:
             s = best + str(i2) + category +'&cur_year='+y+'&cur_month='+str(m)+'&cur_day='+str(i)
-            cr=craw(s)
-            ans_t+=list(cr.values())
-            ans_c+=list(cr.keys())
-    return dict(zip(ans_c,ans_t))
+            ans_c+=craw(s)
+    return ans_c
 
 def craw(s):
-    ans_t=[]
     ans_c=[]
     html = req.urlopen(s)
-    rq= bs(html, "html.parser")
-    get=rq.select('td.book_data_intro_form.subject_long > a')# 베스트에 오른 로맨스판타지 제목 추출
-
+    rq= bs(html, "lxml")
+    get=rq.select('td.book_data_intro_form.subject_long > a')# 베스트에 오른 로맨스판타지 북코드추출
     for g in get:
         title=g.text.strip()
         if '[로맨스판타지]' in title:
-            t_str=re.sub('\<\d.+?\>','',g.text.replace("[로맨스판타지]",""))
-            t_str=re.sub('\[+.+\]','',re.sub('\(+.+\)','',t_str))
-            ans_t.append(t_str)
             c_str=re.search('[<a href="/literature/view/book_intro.html?book_code=].+?>', str(g)).group()
             c_str=c_str.replace('<a href="/literature/view/book_intro.html?book_code=', '').replace('">', '')
             ans_c.append(c_str)
-
-    return dict(zip(ans_c,ans_t))
+    return ans_c
 
 
 if __name__ == '__main__':
-    os.chdir('./infos')
+    os.chdir('./infos/month_not_remove')
 
     pagelist=[1,2,3,4,5]#1~100순위가 담긴 페이지 번호
     month=[1,2,3,4,5,6,7,8,9,10,11,12]#달
@@ -63,13 +54,10 @@ if __name__ == '__main__':
         else:
             li = get_t_info(best, category, year, mon, d, pagelist)
         try:
-            t_df['code']=li.keys()
-            t_df['best']=li.values()
+            t_df['code']=li
             print('pass')
         except ValueError:#ValueError가 있을 경우
-            t_df['code']= pd.Series(li.keys())
-            t_df['best'] = pd.Series(li.values())
+            t_df['code']= pd.Series(li)
             print('pass')
 
-        t_df.to_csv(str(mon)+"월 조아라 로판 투데이베스트 목록(중복있음).txt",mode='w' ,sep='\t', index=False)
-
+        t_df.to_csv(str(mon)+"월_조아라_로판_투데이베스트_목록(중복있음).txt",mode='w' ,sep='\t', index=False)
