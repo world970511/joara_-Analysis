@@ -3,7 +3,6 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 import re
 import urllib.request as req
-import pandas as pd
 import os
 
 
@@ -13,6 +12,7 @@ def get_t_info(best,category,y,m,d,pagelist):
         for i2 in pagelist:
             s = best + str(i2) + category +'&cur_year='+y+'&cur_month='+str(m)+'&cur_day='+str(i)
             ans_c+=craw(s)
+    print(len(ans_c))
     return ans_c
 
 def craw(s):
@@ -30,7 +30,7 @@ def craw(s):
 
 
 if __name__ == '__main__':
-    os.chdir('./infos/month_not_remove')
+    os.chdir('./infos/bookcode')
 
     pagelist=[1,2,3,4,5]#1~100순위가 담긴 페이지 번호
     month=[1,2,3,4,5,6,7,8,9,10,11,12]#달
@@ -45,7 +45,6 @@ if __name__ == '__main__':
     except:
         print("error!")
 
-    t_df=pd.DataFrame()
     t2=[]
 
     for mon in month[:int(m)]:
@@ -53,11 +52,6 @@ if __name__ == '__main__':
             li=get_t_info(best,category,year,mon,days[mon-1],pagelist)
         else:
             li = get_t_info(best, category, year, mon, d, pagelist)
-        try:
-            t_df['code']=li
-            print('pass')
-        except ValueError:#ValueError가 있을 경우
-            t_df['code']= pd.Series(li)
-            print('pass')
 
-        t_df.to_csv(str(mon)+"월_조아라_로판_투데이베스트_목록(중복있음).txt",mode='w' ,sep='\t', index=False)
+        with open(str(mon)+'월_북코드.txt', 'w', encoding='utf-8')as f:
+            f.writelines('\n'.join(li))
