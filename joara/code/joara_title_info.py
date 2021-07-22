@@ -45,18 +45,20 @@ def remove(str):
 
 if __name__ == '__main__':
     all_data=pd.DataFrame(columns=['code','title','info'])
-    os.chdir('./infos/bookcode')
-    li = os.listdir()
-    m=4
+    os.chdir('./infos/bookcode')#북코드가 있는 폴더로 이동
+    li = os.listdir()#폴더 내의 파일 이름 리스트로 받아옴
 
     for i in li:
-        print(i)
-        with open(i,mode='r',encoding='utf-8') as f:
+        data = pd.read_table(i)
+
+        with open(i,mode='r',encoding='utf-8') as f:#폴더 읽어오기
             f_li= f.readlines()
         info_li =call_info(f_li)#월별 북코드를 통해 소개글/제목 추출
-        infodata=pd.DataFrame(info_li,columns=['code','title','info'])
-        print(infodata)
-        infodata.to_csv(str(m)+'_조아라_로판_투데이베스트_목록(중복있음).txt', mode='w', sep='\t', index=False)
+        infodata=pd.DataFrame(info_li,columns=['code','title','info'])#읽어온 데이터의 형식을 데이터프레임으로 변경
+        print(infodata)#내용 출력
+
+        st=i.replace('_북코드.txt','')
+        infodata.to_csv(st+'_조아라_로판_투베(중복있음).txt', mode='w', sep='\t', index=False)
 
         # 중복제거 및 null 제거
         print('초반 데이터 확인 :', len(infodata))
@@ -66,10 +68,5 @@ if __name__ == '__main__':
 
         infodata.drop_duplicates(subset=['code'], inplace=True)  # 중복된 소설들을 제거한다
         print('제거 확인 :', len(infodata))
-        infodata.to_csv(str(m)+'_조아라_로판_투데이베스트_목록(중복제거).txt', mode='w',sep='\t', index=False)
-        m+=1
+        infodata.to_csv(st+'_조아라_로판_투베(중복제거).txt', mode='w',sep='\t', index=False)
         print('========pass=========')
-
-
-
-
