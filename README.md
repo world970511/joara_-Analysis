@@ -13,14 +13,17 @@ https://from-naeun.tistory.com/83 참고
   <h1>결과</h1>
   
   <h3>제목/소개글에 사용된 명사 사용 빈도 100 </h3>
-  ![image](https://user-images.githubusercontent.com/57740138/161690692-113ab9ea-881c-4f89-8ec4-6c8889b47a08.png)
-  <br/>
+  <img src="https://raw.githubusercontent.com/world970511/joara_-Analysis/main/joara/result/joara100.png">
+
   <h4>1-1. 명사 사용 빈도 10 내림차순</h4>
 - ('빙의', 517), ('집착', 467), ('결혼', 282), ('소설', 256), ('원작', 229), ('후회', 199), ('공작', 193), ('악녀', 186), ('능력', 181), ('남편', 177)
 <br/>
 
  <h4>1-2. 명사 분류</h4>
- - 리디북스 검색 조건을 참고해서 장르/소재&분위기&기타/캐릭터 설정/관계로 분류
+ <ul>
+  <li>리디북스 검색 조건을 참고해서 장르/소재&분위기&기타/캐릭터 설정/관계로 분류<li/>
+  <li>2021 상반기에 어떤 소재/장르/캐릭터가 많이 활용되었는지 파악<li/>
+</ul>
 <table>
 <tbody>
 <tr>
